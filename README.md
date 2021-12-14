@@ -4,7 +4,7 @@ csv 파일을 읽어서 특정 컬럼명을 group by 하여 출력하는 프로�
 - args[0] : resources에 보관된 csv 파일명
 - args[1] : 카운트 할 컬럼명
 
-main function : kr.revelope.study.refactoring.DirtyCodeMain
+main function : [kr.revelope.study.refactoring.DirtyCodeMain](https://github.com/Reve1988/refactoring-sample/blob/master/src/main/java/kr/revelope/study/refactoring/DirtyCodeMain.java)
 
 ---
 
