@@ -5,3 +5,7 @@ csv 파일을 읽어서 특정 컬럼명을 group by 하여 출력하는 프로�
 - args[1] : 카운트 할 컬럼명
 
 main function : kr.revelope.study.refactoring.DirtyCodeMain
+
+---
+
+샘플 csv 출처 : [Sacramento_Crime_January_2006.csv](https://support.spatialkey.com/spatialkey-sample-csv-data/)
