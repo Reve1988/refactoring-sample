@@ -1,14 +1,16 @@
 package kr.revelope.study.refactoring;
 
-import au.com.bytecode.opencsv.CSVReader;
+import kr.revelope.study.refactoring.reader.CSVReader;
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -19,40 +21,46 @@ import java.util.stream.Collectors;
  * 아래 코드를 리팩토링 해보시오
  */
 public class DirtyCodeMain {
-	public static void main(String[] args) {
-		if (args == null || args.length < 2) {
-			throw new IllegalArgumentException("File name and target column name is required.");
-		}
+    private static final int CSV_ARG_LENGTH_LIMIT = 2;
 
-		InputStream inputStream = DirtyCodeMain.class.getClassLoader().getResourceAsStream(args[0]);
-		if (inputStream == null) {
-			throw new IllegalArgumentException("'" + args[0] + "' file can not found.");
-		}
+    public static void main(String[] args) {
+        if (args == null || args.length < CSV_ARG_LENGTH_LIMIT) {
+            throw new IllegalArgumentException("File name and target column name is required.");
+        }
 
-		try (InputStreamReader streamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-			 CSVReader csvReader = new CSVReader(streamReader)) {
+        String fileName = args[0];
+        String columnName = args[1];
 
-			String[] header = csvReader.readNext();
-			if (header == null || header.length == 0) {
-				throw new IllegalArgumentException("First line must be columns. Column can not found.");
-			}
+        InputStream inputStream = Optional.ofNullable(DirtyCodeMain.class.getClassLoader().getResourceAsStream(fileName))
+                .orElseThrow(() -> new IllegalArgumentException(String.format("%s file can not found.", fileName)));
 
-			int columnIndex = ArrayUtils.indexOf(header, args[1]);
-			if (columnIndex == -1) {
-				throw new IllegalArgumentException("First line must be columns. Column can not found.");
-			}
+        try (InputStreamReader streamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+             BufferedReader bufferedReader = new BufferedReader(streamReader);
+             CSVReader csvReader = new CSVReader(bufferedReader)) {
 
-			List<String[]> dataList = csvReader.readAll();
-			Map<String, List<String>> result = dataList.stream()
-					.filter(data -> data.length == header.length)
-					.map(data -> data[columnIndex])
-					.collect(Collectors.groupingBy(column -> column));
+            Map<String, List<String>> result = getGroupingByColumnName(csvReader, columnName);
+            for (String column : result.keySet()) {
+                System.out.println(column + " : " + result.get(column).size());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-			for (String column : result.keySet()) {
-				System.out.println(column + " : " + result.get(column).size());
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+    private static Map<String, List<String>> getGroupingByColumnName(CSVReader csvReader, String columnName) throws IOException {
+        String[] header = csvReader.readNext();
+        if (header == null || header.length == 0) {
+            throw new IllegalArgumentException("First line must be columns. Column can not found.");
+        }
+
+        int columnIndex = ArrayUtils.indexOf(header, columnName);
+        if (columnIndex == -1) {
+            throw new IllegalArgumentException(String.format("Can not found target column %s", columnName));
+        }
+
+        return csvReader.readAll().stream()
+                .filter(data -> data.length == header.length)
+                .map(data -> data[columnIndex])
+                .collect(Collectors.groupingBy(column -> column));
+    }
 }
